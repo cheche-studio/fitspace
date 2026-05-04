@@ -159,7 +159,7 @@ export default function BellyDancePage() {
           ))}
         </div>
         <div style={{ marginTop: '16px', background: 'rgba(192,132,252,0.08)', border: '1px solid rgba(192,132,252,0.2)', borderRadius: '10px', padding: '14px 18px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', lineHeight: '1.6' }}>
-          💜 Mensualidad incluye 4 clases · Vigencia 30 días desde tu pago · Cupo máximo {CLASS_CAPACITY} personas
+          💜  Vigencia 30 días desde tu pago · Cupo máximo {CLASS_CAPACITY} personas
         </div>
       </div>
 
