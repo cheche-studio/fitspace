@@ -95,12 +95,35 @@ export default function BellyDancePage() {
     setLoading(true)
     setError('')
     const supabase = getSupabase()
+
+    // Obtener nombre del perfil
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user?.id)
+      .single()
+
+    // Guardar en Supabase
     await supabase.from('suggestions').insert({
       student_id: user?.id,
       type: 'class',
-      title: 'Belly Dance - Inscripción pendiente',
-      body: `Método: ${paymentMethod} · Precio: $${price} · Código: ${discountApplied ? DISCOUNT_CODE : 'ninguno'}`,
+      title: 'Belly Dance - Inscripción',
+      body: `Método: ${paymentMethod} · Precio: $${price}`,
     })
+
+    // Mandar emails
+    await fetch('/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        studentName: profile?.full_name || 'Alumna',
+        studentEmail: user?.email,
+        price,
+        paymentMethod,
+        discountApplied,
+      }),
+    })
+
     setView('success')
     setLoading(false)
   }
