@@ -28,6 +28,7 @@ export default function BellyDancePage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
   const [discountCode, setDiscountCode] = useState('')
   const [discountApplied, setDiscountApplied] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'transfer' | 'cash'>('stripe')
@@ -74,6 +75,7 @@ export default function BellyDancePage() {
       await supabase.from('profiles').upsert({
         id: data.user.id,
         full_name: name,
+        phone: phone || null,
         role: 'student',
       })
       setUser(data.user)
@@ -96,28 +98,22 @@ export default function BellyDancePage() {
     setError('')
     const supabase = getSupabase()
 
-    // Obtener nombre del perfil
     const { data: profile } = await supabase
       .from('profiles')
-      .select('full_name')
+      .select('full_name, phone')
       .eq('id', user?.id)
       .single()
 
-    // Guardar en Supabase
-    await supabase.from('suggestions').insert({
-      student_id: user?.id,
-      type: 'class',
-      title: 'Belly Dance - Inscripción',
-      body: `Método: ${paymentMethod} · Precio: $${price}`,
-    })
+    const studentName = profile?.full_name || name || 'Alumna'
+    const studentPhone = profile?.phone || phone || null
 
-    // Mandar emails
     await fetch('/api/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        studentName: profile?.full_name || 'Alumna',
+        studentName,
         studentEmail: user?.email,
+        studentPhone,
         price,
         paymentMethod,
         discountApplied,
@@ -195,6 +191,8 @@ export default function BellyDancePage() {
             {error && <div style={s.error}>{error}</div>}
             <label style={s.label}>Nombre completo</label>
             <input style={s.input} placeholder="Tu nombre" value={name} onChange={e => setName(e.target.value)} />
+            <label style={s.label}>Teléfono (WhatsApp)</label>
+            <input style={s.input} type="tel" placeholder="55 1234 5678" value={phone} onChange={e => setPhone(e.target.value)} />
             <label style={s.label}>Correo electrónico</label>
             <input style={s.input} type="email" placeholder="tu@correo.com" value={email} onChange={e => setEmail(e.target.value)} />
             <label style={s.label}>Contraseña</label>

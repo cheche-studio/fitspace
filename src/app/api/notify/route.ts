@@ -1,8 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export async function POST(req: NextRequest) {
-  const { studentName, studentEmail, price, paymentMethod, discountApplied } = await req.json()
+  const { studentName, studentEmail, studentPhone, price, paymentMethod, discountApplied } = await req.json()
+
+  // Guardar inscripción en Supabase
+  const { error: dbError } = await supabase
+    .from('belly_dance_registrations')
+    .insert({
+      full_name: studentName,
+      email: studentEmail,
+      phone: studentPhone || null,
+      payment_method: paymentMethod,
+      discount_code: discountApplied ? 'chechebelly' : null,
+      amount_paid: price,
+      payment_status: 'pending',
+    })
+
+  if (dbError) {
+    console.error('Error guardando inscripción:', dbError.message)
+    // No bloqueamos el flujo — los emails se mandan igual
+  }
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -21,6 +45,7 @@ export async function POST(req: NextRequest) {
       <h2>Nueva inscripción a Belly Dance</h2>
       <p><b>Alumna:</b> ${studentName}</p>
       <p><b>Correo:</b> ${studentEmail}</p>
+      <p><b>Teléfono:</b> ${studentPhone || 'no proporcionado'}</p>
       <p><b>Precio:</b> $${price} MXN ${discountApplied ? '(código early bird)' : ''}</p>
       <p><b>Método de pago:</b> ${paymentMethod}</p>
       <p><b>Clases:</b> Sábados 11:30am — 1:00pm · Mayo 2025</p>
